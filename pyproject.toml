@@ -6,17 +6,31 @@ authors = [
     {name = "srestrero",email = "srestreporo@unal.edu.co"}
 ]
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10, <4.0"
 dependencies = [
     "fastapi (>=0.115.14,<0.116.0)",
     "uvicorn[standard] (>=0.35.0,<0.36.0)",
     "sqlalchemy (>=2.0.41,<3.0.0)",
     "psycopg2-binary (>=2.9.10,<3.0.0)",
     "pydantic-settings (>=2.10.1,<3.0.0)",
+    "pydantic[email] (>=2.9.1,<3.0.0)",
     "alembic (>=1.16.2,<2.0.0)"
 ]
 
+[tool.poetry]
+packages = [{include = "*", from = "src"}]
+
+[tool.poetry.group.dev.dependencies]
+commitizen = "^4.8.2"
+pre-commit = "^4.2.0"
+poethepoet = "^0.34.0"
+faker = "^26.0.0"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.poe.tasks]
+dev = "uvicorn main:app --reload --app-dir src"
+db-generate = "alembic revision --autogenerate"
+db-migrate = "alembic upgrade head"
