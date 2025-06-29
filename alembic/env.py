@@ -7,10 +7,11 @@ from sqlalchemy import pool
 
 from alembic import context
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+# Agregamos el directorio `src` al path para que Alembic encuentre los modelos
+sys.path.append(os.path.join(sys.path[0], 'src'))
 
-from src.models import Base, Employee, DocumentType, Gender, OperationalRole, AvailabilityStatus, DailyAvailability
-from src.core.config import settings
+from models import Base, Employee, DocumentType, Gender, OperationalRole, AvailabilityStatus, DailyAvailability
+from core.config import settings
 
 config = context.config
 
