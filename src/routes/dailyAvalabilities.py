@@ -1,0 +1,49 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.orm import Session
+from typing import List
+
+import schemas
+from db.session import get_db
+from services import availability_service
+from utils.exceptions import RecordNotFoundError, DuplicateRecordError
+
+router = APIRouter(
+    prefix="/availabilities",
+    tags=["Availabilities"],
+)
+
+@router.post("/", response_model=schemas.DailyAvailability, status_code=status.HTTP_201_CREATED, summary="Create a new availability record")
+def create_availability_endpoint(
+    availability_in: schemas.DailyAvailabilityCreate,
+    db: Session = Depends(get_db),
+):
+    """
+    Creates a new daily availability record for an employee.
+    - Raises 404 if the employee does not exist or is inactive.
+    - Raises 409 if an availability record for that employee and date already exists.
+    """
+    try:
+        return availability_service.create_availability(db=db, availability_in=availability_in)
+    except (RecordNotFoundError, ValueError) as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except DuplicateRecordError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+@router.get("/employee/{employee_id}", response_model=List[schemas.DailyAvailability], summary="Get all availabilities for an employee")
+def get_availabilities_for_employee_endpoint(
+    employee_id: int,
+    db: Session = Depends(get_db),
+    skip: int = 0,
+    limit: int = 100,
+):
+    """
+    Retrieves all availability records for a specific employee.
+    - Raises 404 if the employee does not exist.
+    """
+    try:
+        return availability_service.get_availabilities_by_employee(db=db, employee_id=employee_id, skip=skip, limit=limit)
+    except RecordNotFoundError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+# Aquí irían los endpoints para GET (por ID), PUT y DELETE para una disponibilidad específica,
+# siguiendo el mismo patrón que el controlador de empleados.
