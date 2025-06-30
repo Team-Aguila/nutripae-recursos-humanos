@@ -1,0 +1,42 @@
+services:
+  db:
+    # Usamos la misma imagen de postgres
+    image: postgres:17-alpine
+    # NO usamos container_name para evitar conflictos si el de desarrollo está corriendo.
+    # Docker Compose le dará un nombre único basado en el proyecto y servicio.
+    restart: "no" # No queremos que se reinicie, es un servicio de un solo uso.
+    env_file:
+      - .env.test # Usamos las variables de entorno de test.
+    volumes:
+      # MUY IMPORTANTE: No usamos un volumen NOMBRADO.
+      # Al no darle nombre, Docker crea un volumen ANÓNIMO que se elimina
+      # fácilmente con 'docker-compose down -v'. Esto garantiza una BD limpia cada vez.
+      - /var/lib/postgresql/data
+    healthcheck:
+      # Mantenemos el healthcheck, es una buena práctica.
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  api:
+    # Reutilizamos la configuración de build del Dockerfile.
+    build: .
+    # NO usamos container_name.
+    restart: "no"
+    env_file:
+      - .env.test
+    # NO exponemos puertos. El runner de tests no necesita ser accesible desde el exterior.
+    # Se comunica con la BD a través de la red interna de Docker.
+    depends_on:
+      db:
+        condition: service_healthy # Espera a que la BD esté lista.
+    # ---- EL COMANDO CLAVE ----
+    # Este es el cambio más importante. Sobreescribimos el CMD del Dockerfile.
+    command: sh -c "
+        poetry install && 
+        poetry run alembic upgrade head && 
+        poetry run pytest"
+
+# No necesitamos definir volúmenes nombrados aquí.

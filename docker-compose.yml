@@ -1,14 +1,9 @@
+# docker-compose.yml (BASE)
+version: '3.8'
 services:
-  db-development:
+  db:
     image: postgres:17-alpine
-    container_name: pae-rh-db-development
-    restart: always
-    env_file:
-      - .env.development
-    ports:
-      - "5001:5432"
-    volumes:
-      - pae-rh-dev-data:/var/lib/postgresql/data
+    # SIN container_name, restart, env_file, o volumes nombrados aquí
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
       interval: 10s
@@ -16,6 +11,9 @@ services:
       retries: 5
       start_period: 10s
 
-volumes:
-  pae-rh-dev-data:
-    driver: local
+  api:
+    build: .
+    # SIN container_name, restart, env_file, ports, o volumes de código aquí
+    depends_on:
+      db:
+        condition: service_healthy

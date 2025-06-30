@@ -25,6 +25,8 @@ commitizen = "^4.8.2"
 pre-commit = "^4.2.0"
 poethepoet = "^0.34.0"
 faker = "^26.0.0"
+pytest = "^8.3.2"
+httpx = "^0.27.0"
 
 [build-system]
 requires = ["poetry-core>=2.0.0,<3.0.0"]
@@ -32,5 +34,6 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poe.tasks]
 dev = "uvicorn main:app --reload --app-dir src"
+test = "pytest"
 db-generate = "alembic revision --autogenerate"
 db-migrate = "alembic upgrade head"
