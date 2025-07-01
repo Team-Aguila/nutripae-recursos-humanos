@@ -6,8 +6,12 @@ RUN pip install poetry
 
 COPY poetry.lock pyproject.toml ./
 
-RUN poetry config virtualenvs.create false && poetry install --no-root --only main
+RUN poetry config virtualenvs.create false \
+    && poetry install --no-root --with dev
 
 COPY . .
 
-CMD ["poetry", "run", "uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
+# Agregar PYTHONPATH para que Python encuentre los módulos en src/
+ENV PYTHONPATH=/app/src
+
+CMD ["poetry", "run", "poe", "dev"]

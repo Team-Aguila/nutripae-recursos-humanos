@@ -54,27 +54,28 @@ Utilizado para el desarrollo diario. Incluye *hot-reloading* para que los cambio
 **1. Levantar el ambiente:**
 
 ```bash
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+cd compose/dev &&
+docker-compose up --build -d &&
+cd ../..
 ```
 
 
 **2. Detener el ambiente:**
 
 ```bash
-docker-compose -f docker-compose.yml -f docker-compose.dev.yml down
+cd compose/dev &&
+docker-compose down -v --remove-orphans &&
+cd ../..
 ```
 
 ## Entorno de Pruebas 
 
-**1. Levantar el ambiente:**
+**1. Lanzar las pruebas:**
 
 ```bash
-docker-compose -f docker-compose.test.yml up --build --abort-on-container-exit --exit-code-from api
-```
+cd compose/test && 
+docker compose up --build --abort-on-container-exit --exit-code-from api-test &&
+docker compose down -v --remove-orphans &&
+cd ..
 
-
-**2. Detener el ambiente:**
-
-```bash
-docker-compose -f docker-compose.test.yml down -v
 ```
