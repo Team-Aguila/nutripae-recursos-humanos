@@ -28,10 +28,14 @@ class ParametricService:
             raise RecordNotFoundError(f"Record with id {id} not found in {self.repository.model.__tablename__}.")
         return record
 
+class OperationalRoleService(ParametricService):
+    def get_all_with_count(self, db: Session) -> list:
+        """Obtiene todos los roles con el conteo de empleados."""
+        return self.repository.get_with_employee_count(db)
+
 # --- Creamos una instancia del servicio para cada tabla paramétrica ---
-# Le pasamos a cada servicio el repositorio correspondiente.
 
 document_type_service = ParametricService(document_type_repo)
 gender_service = ParametricService(gender_repo)
-operational_role_service = ParametricService(operational_role_repo)
+operational_role_service = OperationalRoleService(operational_role_repo)
 availability_status_service = ParametricService(availability_status_repo)

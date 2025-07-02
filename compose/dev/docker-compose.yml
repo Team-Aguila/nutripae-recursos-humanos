@@ -5,7 +5,6 @@ services:
     container_name: pae-rh-db-dev
     restart: always
     env_file:
-      # RUTA ACTUALIZADA: Sube dos niveles para encontrar el .env en la raíz
       - ../../.env.development
     volumes:
       - mi-app-dev-data:/var/lib/postgresql/data
@@ -23,7 +22,6 @@ services:
     container_name: pae-rh-api-dev
     restart: always
     env_file:
-      # RUTA ACTUALIZADA: Sube dos niveles para encontrar el .env en la raíz
       - ../../.env.development
     ports:
       - "8001:8000"
@@ -32,7 +30,7 @@ services:
     depends_on:
       db-dev:
         condition: service_healthy
-    command: sh -c "poetry run alembic upgrade head && poetry run uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+    command: sh -c "poetry run alembic upgrade head && poetry run python -m src.db.sync_seeder && poetry run uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
 
 volumes:
   mi-app-dev-data:

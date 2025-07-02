@@ -22,3 +22,6 @@ class OperationalRole(OperationalRoleBase):
 class AvailabilityStatus(ParametricBase):
     id: int
     model_config = ConfigDict(from_attributes=True)
+
+class OperationalRoleWithCount(OperationalRole):
+    employee_count: int

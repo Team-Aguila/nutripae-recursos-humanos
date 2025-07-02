@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
 
 import schemas
 from db.session import get_db
@@ -27,16 +27,27 @@ def create_employee_endpoint(
     except DuplicateRecordError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
-@router.get("/", response_model=List[schemas.Employee], summary="Get a list of all employees")
+@router.get("/", response_model=List[schemas.Employee], summary="Get a list of all employees with filters")
 def read_employees_endpoint(
     db: Session = Depends(get_db),
     skip: int = Query(0, ge=0),
     limit: int = Query(100, ge=1, le=200),
+    search: Optional[str] = Query(None, description="Search by name or document number"),
+    role_id: Optional[int] = Query(None, description="Filter by operational role ID"),
+    is_active: Optional[bool] = Query(None, description="Filter by active status")
 ):
     """
-    Retrieves a paginated list of employees.
+    Retrieves a paginated list of employees. 
+    It can be filtered by name, document, role, and active status.
     """
-    return employee_service.get_all_employees(db=db, skip=skip, limit=limit)
+    return employee_service.get_all_employees(
+        db=db, 
+        search=search, 
+        role_id=role_id, 
+        is_active=is_active, 
+        skip=skip, 
+        limit=limit
+    )
 
 @router.get("/{employee_id}", response_model=schemas.Employee, summary="Get an employee by ID")
 def read_employee_endpoint(
@@ -44,7 +55,7 @@ def read_employee_endpoint(
     db: Session = Depends(get_db),
 ):
     """
-    Retrieves a single employee by their unique ID.
+    Retrieivs a single employee by their unique ID.
     - Raises a 404 Not Found error if the employee does not exist.
     """
     try:

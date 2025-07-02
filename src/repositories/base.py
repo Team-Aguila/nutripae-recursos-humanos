@@ -1,8 +1,8 @@
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar, Union, Callable
 
 from fastapi.encoders import jsonable_encoder
 from pydantic import BaseModel
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, Query
 from models.base import Base
 
 ModelType = TypeVar("ModelType", bound=Base)
@@ -17,8 +17,11 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         """
         self.model = model
 
-    def get(self, db: Session, id: Any) -> Optional[ModelType]:
-        return db.query(self.model).filter(self.model.id == id).first()
+    def get(self, db: Session, id: Any, *, options: Optional[Callable[[Query], Query]] = None) -> Optional[ModelType]:
+        query = db.query(self.model)
+        if options:
+            query = options(query)
+        return query.filter(self.model.id == id).first()
 
     def get_multi(
         self, db: Session, *, skip: int = 0, limit: int = 100
@@ -56,8 +59,9 @@ class BaseRepository(Generic[ModelType, CreateSchemaType, UpdateSchemaType]):
         db.refresh(db_obj)
         return db_obj
 
-    def remove(self, db: Session, *, id: int) -> Optional[ModelType]:
-        obj = db.query(self.model).get(id)
+    def remove(self, db: Session, *, id: int, options: Optional[Callable[[Query], Query]] = None) -> Optional[ModelType]:
+        # Usamos get para poder aplicar las mismas opciones de carga
+        obj = self.get(db, id, options=options)
         if obj:
             db.delete(obj)
             db.commit()

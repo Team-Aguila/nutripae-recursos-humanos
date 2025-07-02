@@ -1,6 +1,6 @@
 # app/services/employee.py
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from models import Employee
 from schemas import EmployeeCreate, EmployeeUpdate
 from repositories import employee_repo
@@ -12,14 +12,39 @@ class EmployeeService:
         Obtiene un empleado por su ID.
         Lanza RecordNotFoundError si no existe.
         """
-        employee = employee_repo.get(db, id=employee_id)
+        employee = employee_repo.get(
+            db, 
+            id=employee_id,
+            options=lambda query: query.options(
+                joinedload(Employee.document_type),
+                joinedload(Employee.gender),
+                joinedload(Employee.operational_role)
+            )
+        )
         if not employee:
             raise RecordNotFoundError(f"Employee with id {employee_id} not found.")
         return employee
 
-    def get_all_employees(self, db: Session, skip: int = 0, limit: int = 100) -> list[Employee]:
-        """Obtiene una lista de todos los empleados."""
-        return employee_repo.get_multi(db, skip=skip, limit=limit)
+    from typing import Optional
+
+    def get_all_employees(
+        self, 
+        db: Session, 
+        search: Optional[str] = None,
+        role_id: Optional[int] = None,
+        is_active: Optional[bool] = None,
+        skip: int = 0, 
+        limit: int = 100
+    ) -> list[Employee]:
+        """Obtiene una lista de todos los empleados con filtros opcionales."""
+        return employee_repo.search_and_filter(
+            db,
+            search=search,
+            role_id=role_id,
+            is_active=is_active,
+            skip=skip,
+            limit=limit
+        )
 
     def create_employee(self, db: Session, employee_in: EmployeeCreate) -> Employee:
         """
@@ -52,8 +77,20 @@ class EmployeeService:
         Elimina un empleado por su ID.
         Lanza RecordNotFoundError si no existe.
         """
-        self.get_employee(db, employee_id) # Valida que el empleado exista antes de intentar borrar
-        return employee_repo.remove(db, id=employee_id)
+        # Le pasamos las opciones de carga a remove para que el objeto devuelto
+        # tenga las relaciones y no cause un DetachedInstanceError.
+        options = lambda query: query.options(
+            joinedload(Employee.document_type),
+            joinedload(Employee.gender),
+            joinedload(Employee.operational_role)
+        )
+        
+        deleted_employee = employee_repo.remove(db, id=employee_id, options=options)
+        
+        if not deleted_employee:
+            raise RecordNotFoundError(f"Employee with id {employee_id} not found.")
+            
+        return deleted_employee
 
 # Creamos una instancia del servicio para ser usada con inyección de dependencias
 employee_service = EmployeeService()

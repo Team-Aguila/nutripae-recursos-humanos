@@ -18,8 +18,8 @@
 .venv
 /poetry.toml
 
-.env
-.env.*
+.env.development
+.env.test
 
 __pycache__/
 

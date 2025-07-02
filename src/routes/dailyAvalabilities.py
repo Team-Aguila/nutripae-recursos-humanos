@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List, Optional
+from datetime import date
 
 import schemas
 from db.session import get_db
@@ -28,6 +29,24 @@ def create_availability_endpoint(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except DuplicateRecordError as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+
+@router.get("/", response_model=List[schemas.DailyAvailabilityDetails], summary="Get detailed availabilities by date range")
+def get_detailed_availabilities_endpoint(
+    start_date: date,
+    end_date: date,
+    employee_id: Optional[int] = None,
+    db: Session = Depends(get_db),
+):
+    """
+    Retrieves detailed availability records within a date range.
+    - Optionally filters by a specific employee.
+    """
+    try:
+        return availability_service.get_detailed_availabilities(
+            db=db, start_date=start_date, end_date=end_date, employee_id=employee_id
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 @router.get("/employee/{employee_id}", response_model=List[schemas.DailyAvailability], summary="Get all availabilities for an employee")
 def get_availabilities_for_employee_endpoint(

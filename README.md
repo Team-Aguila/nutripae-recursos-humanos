@@ -39,7 +39,6 @@ Antes de levantar cualquier ambiente, es necesario crear los archivos de entorno
 
 * `.env.development`: Para el ambiente de desarrollo.
 * `.env.test`: Para el ambiente de pruebas.
-* `.env.prod`: Para el ambiente de producción.
 
 Puedes usar los archivos `.env.example` como plantilla para crearlos.
 
@@ -76,6 +75,6 @@ cd ../..
 cd compose/test && 
 docker compose up --build --abort-on-container-exit --exit-code-from api-test &&
 docker compose down -v --remove-orphans &&
-cd ..
+cd ../..
 
 ```

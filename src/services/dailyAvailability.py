@@ -39,8 +39,12 @@ class DailyAvailabilityService:
             raise RecordNotFoundError(f"Employee with id {availability_in.employee_id} not found.")
         if not employee.is_active:
             raise ValueError(f"Cannot register availability for inactive employee {employee.full_name}.")
+
+        # Regla de Negocio 2: Validar que la fecha no sea en el pasado.
+        if availability_in.date < date.today():
+            raise ValueError("Cannot register availability for a past date.")
             
-        # Regla de Negocio 2: Evitar duplicados.
+        # Regla de Negocio 3: Evitar duplicados.
         existing_availability = availability_repo.get_by_employee_and_date(
             db, employee_id=availability_in.employee_id, target_date=availability_in.date
         )
@@ -56,10 +60,21 @@ class DailyAvailabilityService:
         db_availability = self.get_availability(db, availability_id)
         return availability_repo.update(db, db_obj=db_availability, obj_in=availability_in)
 
-    def delete_availability(self, db: Session, availability_id: int) -> DailyAvailability:
-        """Elimina un registro de disponibilidad."""
-        self.get_availability(db, availability_id) # Valida que exista
-        return availability_repo.remove(db, id=availability_id)
+    from typing import Optional
+
+    def get_detailed_availabilities(
+        self, 
+        db: Session, 
+        start_date: date, 
+        end_date: date, 
+        employee_id: Optional[int] = None
+    ) -> list[DailyAvailability]:
+        """Obtiene una lista detallada de disponibilidades por rango de fecha y opcionalmente por empleado."""
+        if start_date > end_date:
+            raise ValueError("Start date cannot be after end date.")
+        return availability_repo.get_by_date_range(
+            db, start_date=start_date, end_date=end_date, employee_id=employee_id
+        )
 
 
 availability_service = DailyAvailabilityService()

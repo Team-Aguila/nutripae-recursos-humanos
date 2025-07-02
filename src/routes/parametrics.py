@@ -24,9 +24,9 @@ def get_document_types_endpoint(db: Session = Depends(get_db)):
 def get_genders_endpoint(db: Session = Depends(get_db)):
     return gender_service.get_all(db=db)
 
-@router.get("/operational-roles", response_model=List[schemas.OperationalRole], summary="Get all available operational roles")
+@router.get("/operational-roles", response_model=List[schemas.OperationalRoleWithCount], summary="Get all available operational roles with employee count")
 def get_operational_roles_endpoint(db: Session = Depends(get_db)):
-    return operational_role_service.get_all(db=db)
+    return operational_role_service.get_all_with_count(db=db)
 
 @router.get("/availability-statuses", response_model=List[schemas.AvailabilityStatus], summary="Get all available availability statuses")
 def get_availability_statuses_endpoint(db: Session = Depends(get_db)):
