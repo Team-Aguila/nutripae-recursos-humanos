@@ -1,0 +1,37 @@
+version: '3.8'
+services:
+  db-dev:
+    image: postgres:17-alpine
+    container_name: pae-rh-db-dev
+    restart: always
+    env_file:
+      - ../../.env.development
+    volumes:
+      - mi-app-dev-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  api-dev:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    container_name: pae-rh-api-dev
+    restart: always
+    env_file:
+      - ../../.env.development
+    ports:
+      - "8001:8000"
+    volumes:
+      - ../../:/app
+    depends_on:
+      db-dev:
+        condition: service_healthy
+    command: sh -c "poetry run alembic upgrade head && poetry run python -m src.db.sync_seeder && poetry run uvicorn main:app --host 0.0.0.0 --port 8000 --reload"
+
+volumes:
+  mi-app-dev-data:
+    driver: local

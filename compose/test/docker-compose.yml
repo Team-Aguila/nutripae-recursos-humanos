@@ -1,0 +1,31 @@
+version: '3.8'
+services:
+  db-test:
+    image: postgres:17-alpine
+    container_name: pae-rh-db-test
+    restart: "no"
+    env_file:
+      # RUTA ACTUALIZADA
+      - ../../.env.test
+    volumes:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  api-test:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    container_name: pae-rh-api-test
+    restart: "no"
+    env_file:
+      # RUTA ACTUALIZADA
+      - ../../.env.test
+    depends_on:
+      db-test:
+        condition: service_healthy
+    command: sh -c "poetry install && poetry run alembic upgrade head && poetry run pytest"
