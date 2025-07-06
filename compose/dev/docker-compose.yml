@@ -24,7 +24,7 @@ services:
     env_file:
       - ../../.env.development
     ports:
-      - "8001:8000"
+      - "8005:8000"
     volumes:
       - ../../:/app
     depends_on:
