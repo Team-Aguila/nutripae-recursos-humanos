@@ -23,10 +23,25 @@ class Settings(BaseSettings):
         return f"postgresql+psycopg2://{data.get('POSTGRES_USER')}:{data.get('POSTGRES_PASSWORD')}@{data.get('DB_HOST')}:{data.get('DB_HOST_PORT')}/{data.get('POSTGRES_DB')}"
 
     API_PREFIX_STR: str = "/api/v1"
-    PROJECT_NAME: str = "API Nutri PAE Recursos Humanos"
+    MODULE_IDENTIFIER: str = "nutripae-rh"
+
+    # Configuración del servicio de autenticación
+    NUTRIPAE_AUTH_HOST: str
+    NUTRIPAE_AUTH_PORT: int
+    NUTRIPAE_AUTH_PREFIX_STR: str = "/api/v1"
+    NUTRIPAE_AUTH_URL: str | None = None
+    
+    @field_validator("NUTRIPAE_AUTH_URL", mode='before')
+    @classmethod
+    def assemble_nutripae_auth_url(cls, v: str | None, values) -> any:
+        if isinstance(v, str):
+            return v
+        
+        data = values.data
+        return f"http://{data.get('NUTRIPAE_AUTH_HOST')}:{data.get('NUTRIPAE_AUTH_PORT')}{data.get('NUTRIPAE_AUTH_PREFIX_STR')}"
 
     model_config = SettingsConfigDict(
-        env_file=f".env.{os.getenv('ENV_STATE', 'development')}",
+        env_file=f".env",
         extra="ignore"
     )
 
