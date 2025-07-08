@@ -32,8 +32,10 @@ class Settings(BaseSettings):
     NUTRIPAE_AUTH_HOST: str
     NUTRIPAE_AUTH_PORT: int
     NUTRIPAE_AUTH_PREFIX_STR: str = "/api/v1"
-    NUTRIPAE_AUTH_URL: str | None = None
-     
+    NUTRIPAE_AUTH_URL: str = "http://nutripae-auth-api:8000/api/v1"
+
+    @field_validator("NUTRIPAE_AUTH_URL", mode='before')
+    @classmethod
     def assemble_nutripae_auth_url(cls, v: str | None, values) -> any:
         if isinstance(v, str):
             return v
