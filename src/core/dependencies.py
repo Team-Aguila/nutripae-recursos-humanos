@@ -47,6 +47,7 @@ def require_permission(permission: str):
             }
             
             logger.info(f"Checking authorization for user with permission '{permission}' on endpoint '{endpoint}'")
+            logger.info(f"NUTRIPAE_AUTH_URL: {settings.NUTRIPAE_AUTH_URL}")
             
             # Hacer request al servicio de auth
             async with httpx.AsyncClient(timeout=10.0) as client:
