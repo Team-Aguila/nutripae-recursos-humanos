@@ -7,6 +7,11 @@ import schemas
 from db.session import get_db
 from services import availability_service
 from utils.exceptions import RecordNotFoundError, DuplicateRecordError
+from core.dependencies import (
+    require_create,
+    require_read,
+    require_list
+)
 
 router = APIRouter(
     prefix="/availabilities",
@@ -17,11 +22,13 @@ router = APIRouter(
 def create_availability_endpoint(
     availability_in: schemas.DailyAvailabilityCreate,
     db: Session = Depends(get_db),
+    current_user: dict = Depends(require_create()),
 ):
     """
     Creates a new daily availability record for an employee.
     - Raises 404 if the employee does not exist or is inactive.
     - Raises 409 if an availability record for that employee and date already exists.
+    - Requires 'nutripae-rh:create' permission.
     """
     try:
         return availability_service.create_availability(db=db, availability_in=availability_in)
@@ -36,10 +43,12 @@ def get_detailed_availabilities_endpoint(
     end_date: date,
     employee_id: Optional[int] = None,
     db: Session = Depends(get_db),
+    current_user: dict = Depends(require_list()),
 ):
     """
     Retrieves detailed availability records within a date range.
     - Optionally filters by a specific employee.
+    - Requires 'nutripae-rh:list' permission.
     """
     try:
         return availability_service.get_detailed_availabilities(
@@ -54,10 +63,12 @@ def get_availabilities_for_employee_endpoint(
     db: Session = Depends(get_db),
     skip: int = 0,
     limit: int = 100,
+    current_user: dict = Depends(require_read()),
 ):
     """
     Retrieves all availability records for a specific employee.
     - Raises 404 if the employee does not exist.
+    - Requires 'nutripae-rh:read' permission.
     """
     try:
         return availability_service.get_availabilities_by_employee(db=db, employee_id=employee_id, skip=skip, limit=limit)

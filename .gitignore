@@ -26,3 +26,5 @@ __pycache__/
 client_sdk/node_modules
 client_sdk/src
 client_sdk/.npmrc
+
+.env

@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from sqlalchemy.orm import Session
 from typing import List, Optional
 
@@ -6,6 +6,13 @@ import schemas
 from db.session import get_db
 from services import employee_service
 from utils.exceptions import RecordNotFoundError, DuplicateRecordError
+from core.dependencies import (
+    require_create,
+    require_read,
+    require_update,
+    require_delete,
+    require_list
+)
 
 router = APIRouter(
     prefix="/employees",
@@ -16,11 +23,13 @@ router = APIRouter(
 def create_employee_endpoint(
     employee_in: schemas.EmployeeCreate,
     db: Session = Depends(get_db),
+    current_user: dict = Depends(require_create()),
 ):
     """
     Creates a new employee in the system.
     - **document_number**: Must be unique.
     - Raises a 409 Conflict error if the document number already exists.
+    - Requires 'nutripae-rh:create' permission.
     """
     try:
         return employee_service.create_employee(db=db, employee_in=employee_in)
@@ -34,11 +43,13 @@ def read_employees_endpoint(
     limit: int = Query(100, ge=1, le=200),
     search: Optional[str] = Query(None, description="Search by name or document number"),
     role_id: Optional[int] = Query(None, description="Filter by operational role ID"),
-    is_active: Optional[bool] = Query(None, description="Filter by active status")
+    is_active: Optional[bool] = Query(None, description="Filter by active status"),
+    current_user: dict = Depends(require_list()),
 ):
     """
     Retrieves a paginated list of employees. 
     It can be filtered by name, document, role, and active status.
+    - Requires 'nutripae-rh:list' permission.
     """
     return employee_service.get_all_employees(
         db=db, 
@@ -53,10 +64,12 @@ def read_employees_endpoint(
 def read_employee_endpoint(
     employee_id: int,
     db: Session = Depends(get_db),
+    current_user: dict = Depends(require_read()),
 ):
     """
-    Retrieivs a single employee by their unique ID.
+    Retrieves a single employee by their unique ID.
     - Raises a 404 Not Found error if the employee does not exist.
+    - Requires 'nutripae-rh:read' permission.
     """
     try:
         return employee_service.get_employee(db=db, employee_id=employee_id)
@@ -68,10 +81,12 @@ def update_employee_endpoint(
     employee_id: int,
     employee_in: schemas.EmployeeUpdate,
     db: Session = Depends(get_db),
+    current_user: dict = Depends(require_update()),
 ):
     """
     Updates an existing employee's information.
     - Raises a 404 Not Found error if the employee does not exist.
+    - Requires 'nutripae-rh:update' permission.
     """
     try:
         return employee_service.update_employee(db=db, employee_id=employee_id, employee_in=employee_in)
@@ -82,11 +97,13 @@ def update_employee_endpoint(
 def delete_employee_endpoint(
     employee_id: int,
     db: Session = Depends(get_db),
+    current_user: dict = Depends(require_delete()),
 ):
     """
     Deletes an employee from the system.
     - Raises a 404 Not Found error if the employee does not exist.
     - Returns the deleted employee's data upon success.
+    - Requires 'nutripae-rh:delete' permission.
     """
     try:
         return employee_service.delete_employee(db=db, employee_id=employee_id)
