@@ -28,7 +28,7 @@ def custom_openapi():
     return app.openapi_schema
 
 app = FastAPI(
-    title="API de Recursos Humanos PAE",
+    title=settings.APP_NAME,
     description="Backend para la gestión del personal y su disponibilidad.",
     version="1.0.0",
 )
