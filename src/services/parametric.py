@@ -8,7 +8,7 @@ from repositories import (
     availability_status_repo
 )
 from typing import Type
-
+import logging
 class ParametricService:
     def __init__(self, repository: BaseRepository):
         """
@@ -19,10 +19,12 @@ class ParametricService:
 
     def get_all(self, db: Session) -> list:
         """Obtiene todos los registros de una tabla paramétrica."""
+        logging.info(f"Getting all {self.repository.model.__tablename__}")
         return self.repository.get_multi(db, limit=200) # Aumentamos el límite para tablas de opciones
 
     def get_by_id(self, db: Session, id: int):
         """Obtiene un registro por su ID."""
+        logging.info(f"Getting {self.repository.model.__tablename__} by id: {id}")
         record = self.repository.get(db, id=id)
         if not record:
             raise RecordNotFoundError(f"Record with id {id} not found in {self.repository.model.__tablename__}.")
@@ -31,6 +33,7 @@ class ParametricService:
 class OperationalRoleService(ParametricService):
     def get_all_with_count(self, db: Session) -> list:
         """Obtiene todos los roles con el conteo de empleados."""
+        logging.info(f"Getting all operational roles with employee count")
         return self.repository.get_with_employee_count(db)
 
 # --- Creamos una instancia del servicio para cada tabla paramétrica ---

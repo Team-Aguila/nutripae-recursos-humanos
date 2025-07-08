@@ -13,7 +13,7 @@ from core.dependencies import (
     require_delete,
     require_list
 )
-
+import logging
 router = APIRouter(
     prefix="/employees",
     tags=["Employees"],
@@ -31,9 +31,11 @@ def create_employee_endpoint(
     - Raises a 409 Conflict error if the document number already exists.
     - Requires 'nutripae-rh:create' permission.
     """
+    logging.info(f"Creating employee: {employee_in}")
     try:
         return employee_service.create_employee(db=db, employee_in=employee_in)
     except DuplicateRecordError as e:
+        logging.error(f"Error creating employee: {e}")
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
 
 @router.get("/", response_model=List[schemas.Employee], summary="Get a list of all employees with filters")
@@ -51,6 +53,7 @@ def read_employees_endpoint(
     It can be filtered by name, document, role, and active status.
     - Requires 'nutripae-rh:list' permission.
     """
+    logging.info(f"Getting employees: {search}, {role_id}, {is_active}, {skip}, {limit}")
     return employee_service.get_all_employees(
         db=db, 
         search=search, 
@@ -74,6 +77,7 @@ def read_employee_endpoint(
     try:
         return employee_service.get_employee(db=db, employee_id=employee_id)
     except RecordNotFoundError as e:
+        logging.error(f"Error getting employee: {e}")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 @router.put("/{employee_id}", response_model=schemas.Employee, summary="Update an employee")
@@ -88,9 +92,11 @@ def update_employee_endpoint(
     - Raises a 404 Not Found error if the employee does not exist.
     - Requires 'nutripae-rh:update' permission.
     """
+    logging.info(f"Updating employee: {employee_id}")
     try:
         return employee_service.update_employee(db=db, employee_id=employee_id, employee_in=employee_in)
     except RecordNotFoundError as e:
+        logging.error(f"Error updating employee: {e}")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 @router.delete("/{employee_id}", response_model=schemas.Employee, summary="Delete an employee")
@@ -105,7 +111,9 @@ def delete_employee_endpoint(
     - Returns the deleted employee's data upon success.
     - Requires 'nutripae-rh:delete' permission.
     """
+    logging.info(f"Deleting employee: {employee_id}")
     try:
         return employee_service.delete_employee(db=db, employee_id=employee_id)
     except RecordNotFoundError as e:
+        logging.error(f"Error deleting employee: {e}")
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

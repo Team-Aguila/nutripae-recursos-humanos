@@ -5,13 +5,14 @@ from models import Employee
 from schemas import EmployeeCreate, EmployeeUpdate
 from repositories import employee_repo
 from utils.exceptions import RecordNotFoundError, DuplicateRecordError
-
+import logging
 class EmployeeService:
     def get_employee(self, db: Session, employee_id: int) -> Employee:
         """
         Obtiene un empleado por su ID.
         Lanza RecordNotFoundError si no existe.
         """
+        logging.info(f"Getting employee: {employee_id}")
         employee = employee_repo.get(
             db, 
             id=employee_id,
@@ -22,6 +23,7 @@ class EmployeeService:
             )
         )
         if not employee:
+            logging.error(f"Employee with id {employee_id} not found.")
             raise RecordNotFoundError(f"Employee with id {employee_id} not found.")
         return employee
 
@@ -37,6 +39,7 @@ class EmployeeService:
         limit: int = 100
     ) -> list[Employee]:
         """Obtiene una lista de todos los empleados con filtros opcionales."""
+        logging.info(f"Getting all employees: {search}, {role_id}, {is_active}, {skip}, {limit}")
         return employee_repo.search_and_filter(
             db,
             search=search,
@@ -51,8 +54,10 @@ class EmployeeService:
         Crea un nuevo empleado.
         Lanza DuplicateRecordError si el número de documento ya existe.
         """
+        logging.info(f"Creating employee: {employee_in}")
         existing_employee = employee_repo.get_by_document_number(db, document_number=employee_in.document_number)
         if existing_employee:
+            logging.error(f"Employee with document number {employee_in.document_number} already exists.")
             raise DuplicateRecordError(f"Employee with document number {employee_in.document_number} already exists.")
         
         # Aquí podrías añadir más lógica de negocio, como enviar un email de bienvenida, etc.
@@ -66,6 +71,7 @@ class EmployeeService:
         Actualiza un empleado existente.
         Lanza RecordNotFoundError si el empleado no existe.
         """
+        logging.info(f"Updating employee: {employee_id}")
         db_employee = self.get_employee(db, employee_id) # Reutiliza el método get para la validación
         
         # Aquí podrías añadir lógica compleja de actualización
@@ -88,6 +94,7 @@ class EmployeeService:
         deleted_employee = employee_repo.remove(db, id=employee_id, options=options)
         
         if not deleted_employee:
+            logging.error(f"Employee with id {employee_id} not found.")
             raise RecordNotFoundError(f"Employee with id {employee_id} not found.")
             
         return deleted_employee

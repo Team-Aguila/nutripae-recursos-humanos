@@ -3,6 +3,9 @@ from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
+    ENV_STATE: str
+    APP_NAME: str
+
     # Variables de entorno para la base de datos
     POSTGRES_USER: str
     POSTGRES_PASSWORD: str
@@ -30,15 +33,15 @@ class Settings(BaseSettings):
     NUTRIPAE_AUTH_PORT: int
     NUTRIPAE_AUTH_PREFIX_STR: str = "/api/v1"
     NUTRIPAE_AUTH_URL: str | None = None
-    
-    
-    
+     
     def assemble_nutripae_auth_url(cls, v: str | None, values) -> any:
         if isinstance(v, str):
             return v
         
         data = values.data
         return f"http://{data.get('NUTRIPAE_AUTH_HOST')}:{data.get('NUTRIPAE_AUTH_PORT')}{data.get('NUTRIPAE_AUTH_PREFIX_STR')}"
+    
+    OTLP_GRPC_ENDPOINT: str
 
     model_config = SettingsConfigDict(
         env_file=f".env",
