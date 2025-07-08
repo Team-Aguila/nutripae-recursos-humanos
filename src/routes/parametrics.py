@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from typing import List
-
+import logging
 import schemas
 from db.session import get_db
 from services import (
@@ -22,6 +22,7 @@ def get_document_types_endpoint(
     db: Session = Depends(get_db),
     current_user: dict = Depends(require_read()),
 ):
+    logging.info(f"Getting document types")
     """
     Get all available document types.
     - Requires 'nutripae-rh:read' permission.
@@ -33,6 +34,7 @@ def get_genders_endpoint(
     db: Session = Depends(get_db),
     current_user: dict = Depends(require_read()),
 ):
+    logging.info(f"Getting genders")
     """
     Get all available genders.
     - Requires 'nutripae-rh:read' permission.
@@ -44,6 +46,7 @@ def get_operational_roles_endpoint(
     db: Session = Depends(get_db),
     current_user: dict = Depends(require_read()),
 ):
+    logging.info(f"Getting operational roles")
     """
     Get all available operational roles with employee count.
     - Requires 'nutripae-rh:read' permission.
@@ -55,6 +58,7 @@ def get_availability_statuses_endpoint(
     db: Session = Depends(get_db),
     current_user: dict = Depends(require_read()),
 ):
+    logging.info(f"Getting availability statuses")
     """
     Get all available availability statuses.
     - Requires 'nutripae-rh:read' permission.

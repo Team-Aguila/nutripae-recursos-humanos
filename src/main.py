@@ -3,6 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from routes import employees, dailyAvalabilities, parametrics
 from core.config import settings
+from utils.telemetrics import PrometheusMiddleware, metrics, setting_otlp
+import logging
+import uvicorn
 
 def custom_openapi():
     if app.openapi_schema:
@@ -33,6 +36,19 @@ app = FastAPI(
     version="1.0.0",
 )
 
+app.add_middleware(PrometheusMiddleware, app_name=settings.APP_NAME)
+app.add_route("/metrics", metrics)
+# Setting OpenTelemetry exporter
+setting_otlp(app, settings.APP_NAME, settings.OTLP_GRPC_ENDPOINT)
+
+class EndpointFilter(logging.Filter):
+    # Uvicorn endpoint access log filter
+    def filter(self, record: logging.LogRecord) -> bool:
+        return record.getMessage().find("GET /metrics") == -1
+
+
+# Filter out /endpoint
+logging.getLogger("uvicorn.access").addFilter(EndpointFilter())
 # Set custom OpenAPI schema
 app.openapi = custom_openapi
 
@@ -83,3 +99,12 @@ def api_root():
 @app.get("/", tags=["Root"])
 def root():
     return {"status": "healthy", "service": "pae-recursos-humanos"}
+
+
+if __name__ == "__main__":
+    # update uvicorn access logger format
+    log_config = uvicorn.config.LOGGING_CONFIG
+    log_config["formatters"]["access"][
+        "fmt"
+    ] = "%(asctime)s %(levelname)s [%(name)s] [%(filename)s:%(lineno)d] [trace_id=%(otelTraceID)s span_id=%(otelSpanID)s resource.service.name=%(otelServiceName)s] - %(message)s"
+    uvicorn.run(app, host="0.0.0.0", port=8000, log_config=log_config)
